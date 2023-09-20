@@ -20,24 +20,31 @@ amqp.connect('amqp://localhost', function(error0, connection) {
       durable: true
     });
 
-    channel.assertQueue('', {
-      exclusive: true
-      }, function(error2, q) {
-        if (error2) {
-          throw error2;
-        }
-      console.log(' [*] Waiting for logs. To exit press CTRL+C');
+    queueHandle(channel, 'Kitchen 1', exchange, ['Italian']);
+    queueHandle(channel, 'Kitchen 2', exchange, ['Japanese', 'Chinese']);
+    queueHandle(channel, 'Kitchen 3', exchange, ['Japanese', 'Thai', 'Indian']);
+    queueHandle(channel, 'Kitchen 4', exchange, ['Italian', 'Japanese', 'Chinese', 'Thai', 'Indian']);
 
-      args.forEach(function(pattern) {
-        channel.bindQueue(q.queue, exchange, pattern);
-      });
-
-      channel.consume(q.queue, function(msg) {
-        console.log(" [x] %s: '%s'", msg.fields.routingKey, msg.content.toString());
-      }, {
-        noAck: true
-      });
-    });
-    
   });
 });  
+
+function queueHandle(channel, qname, exchange, routingKeys) {
+  channel.assertQueue(qname, {
+    exclusive: true
+    }, function(error2, q) {
+      if (error2) {
+        throw error2;
+      }
+    console.log(' [*]' + qname + ': Waiting for order. To exit press CTRL+C');
+
+    routingKeys.forEach(routingKey => {
+      channel.bindQueue(q.queue, exchange, routingKey);
+    });
+
+    channel.consume(q.queue, function(msg) {
+      console.log(" [x] %s receives %s: '%s'", qname, msg.fields.routingKey, msg.content.toString());
+    }, {
+      noAck: true
+    });
+  });
+}
