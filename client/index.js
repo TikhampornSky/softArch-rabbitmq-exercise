@@ -41,29 +41,24 @@ app.post("/placeorder", (req, res) => {
             if (error1) {
                 throw error1;
             }
-            var queue = 'order_queue';
-            var msg = "Hello World!";
+            
+            var exchange = 'menu_exchange';
+            var msg = JSON.stringify(orderItem);
+            var key = ['Italian', 'Japanese', 'Chinese', 'Thai', 'Indian'];
+            var routing_key = key[orderItem.quantity%5];
+        
+            channel.assertExchange(exchange, 'direct', {
+              durable: true
+            });
+            channel.publish(exchange, routing_key, Buffer.from(msg));
+            console.log(" [x] Sent Food %s: '%s'", routing_key, msg);
 
-            channel.assertQueue(queue, {
-                durable: true
-            });
-            channel.sendToQueue(queue, Buffer.from(JSON.stringify(orderItem)), {
-                persistent: true
-            });
-                console.log(" [x] Sent '%s'", orderItem);
-            });
+            res.redirect("/");
         });
     });
-    console.log("update Item %s %s %d",updateMenuItem.id, req.body.name, req.body.quantity);
-
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT,()=>{
     console.log("Server running at port %d",PORT);
 });
-
-//var data = [{
-//   name: '********',
-//   company: 'JP Morgan',
-//   designation: 'Senior Application Engineer'
-//}];
