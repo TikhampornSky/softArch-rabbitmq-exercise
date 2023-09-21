@@ -53,7 +53,7 @@ app.post("/placeorder", (req, res) => {
             channel.publish(exchange, routing_key, Buffer.from(msg));
             console.log(" [x] Sent Food %s: '%s'", routing_key, msg);
 
-            res.redirect("/");
+            res.status(200).send('Success');
         });
     });
 });
